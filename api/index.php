@@ -91,37 +91,37 @@ function loginConsumer() {
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
-}  
+}
 
-   
+
 function updateConsumer(){
-$app = \Slim\Slim::getInstance();
+	$app = \Slim\Slim::getInstance();
 
 	$request = $app->request();
 	$update = json_decode($request->getBody());
 
+	error_log("something to get in update".$request->getBody(), 3, 'G:\xampp\php\logs\php.log');
 
 	$name = $update->name;
-
 	$phone = $update->phone;
 	$email = $update->email;
 	//$password = $update->password;
 
-        $bdate= $update->bdate;
-        $height= $update->height;
-        $weight= $update->weight;
-        $address= $update->address;
-        $gender= $update->gender;
+	$bdate= $update->bdate;
+	$height= $update->height;
+	$weight= $update->weight;
+	$address= $update->address;
+	$gender= $update->gender;
 	$authKey= $update->authKey;
 
 	if (authenticateConsumer($phone,$authKey)) {
 
-        $sql = "UPDATE CONSUMER SET NAME = :name, EMAIL_ADDRESS = :email, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, LAST_UPDATED_DT= :lastUpdatedDt WHERE CONSUMER_LOGIN_ID = :consumerLoginId";
+        $sql = "UPDATE CONSUMER SET NAME = :name, EMAIL_ADDRESS = :email, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
         try {
 			$db = getDB();
 			$stmt = $db->prepare($sql);
 			$stmt->bindParam("name", $name);
-			//$stmt->bindParam("phone", $phone);
+			$stmt->bindParam("phone", $phone);
 			$stmt->bindParam("email", $email);
 			//$stmt->bindParam("password", $password);
                         $stmt->bindParam("height", $height);
@@ -137,15 +137,15 @@ $app = \Slim\Slim::getInstance();
 			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Successful', 'Id' => $id);
 
 		} catch(PDOException $e) {
-			error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
 	} else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
 	}
-	
+
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
-    	$response->body(json_encode($dataArray)); }
+    $response->body(json_encode($dataArray)); }
 ?>

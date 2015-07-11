@@ -99,7 +99,7 @@ function insertInConsumerLogin ($consumerId, $consumerAuthKey, $pushDeviceId, $d
 }
 
 function authenticateConsumer ($username, $consumerAuthKey) {
-	$sql = "SELECT consumer_id FROM consumer c, consumer_login cl WHERE cl.consumer_id = c.consumer_id AND c.phone_num = '".$username."' AND cl.AUTH_KEY = '".$consumerAuthKey."'";
+	$sql = "SELECT c.consumer_id FROM consumer c, consumer_login cl WHERE cl.consumer_id = c.consumer_id AND c.phone_num = '".$username."' AND cl.AUTH_KEY = '".$consumerAuthKey."'";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
