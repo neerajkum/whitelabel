@@ -97,4 +97,25 @@ function insertInConsumerLogin ($consumerId, $consumerAuthKey, $pushDeviceId, $d
 
 	return $consumerLoginId;
 }
+
+function authenticateConsumer ($username, $consumerAuthKey) {
+	$sql = "SELECT consumer_id FROM consumer c, consumer_login cl WHERE cl.consumer_id = c.consumer_id AND c.phone_num = '".$username."' AND cl.AUTH_KEY = '".$consumerAuthKey."'";
+	try {
+		$db = getDB();
+		$stmt = $db->query($sql);
+		$authenticatedUser = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$db = null;
+		//return $users;
+	} catch(PDOException $e) {
+		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		echo '{"error":{"text":'. $e->getMessage() .'}}';
+		$authenticatedUser = null;
+	}
+
+	if ($authenticatedUser != null) {
+		return true;
+	} else {
+		return false;
+	}
+}
 ?>
