@@ -8,6 +8,7 @@ $app = new \Slim\Slim();
 
 $app->post('/registerconsumer','registerConsumer');
 $app->post('/login','loginConsumer');
+$app->post('/updateconsumer','updateConsumer');
 
 $app->run();
 
@@ -90,5 +91,61 @@ function loginConsumer() {
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
-}
+}  
+
+   
+function updateConsumer(){
+$app = \Slim\Slim::getInstance();
+
+	$request = $app->request();
+	$update = json_decode($request->getBody());
+
+
+	$name = $update->name;
+
+	$phone = $update->phone;
+	$email = $update->email;
+	//$password = $update->password;
+
+        $bdate= $update->bdate;
+        $height= $update->height;
+        $weight= $update->weight;
+        $address= $update->address;
+        $gender= $update->gender;
+	$authKey= $update->authKey;
+
+	if (authenticateConsumer($phone,$authKey)) {
+
+        $sql = "UPDATE CONSUMER SET NAME = :name, EMAIL_ADDRESS = :email, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, LAST_UPDATED_DT= :lastUpdatedDt WHERE CONSUMER_LOGIN_ID = :consumerLoginId";
+        try {
+			$db = getDB();
+			$stmt = $db->prepare($sql);
+			$stmt->bindParam("name", $name);
+			//$stmt->bindParam("phone", $phone);
+			$stmt->bindParam("email", $email);
+			//$stmt->bindParam("password", $password);
+                        $stmt->bindParam("height", $height);
+                        $stmt->bindParam("weight", $weight);
+                        $stmt->bindParam("address", $address);
+                        $stmt->bindParam("gender", $gender);
+			$time = date('Y/m/d H:i:s');
+			//$stmt->bindParam("createdDt", $time);
+			$stmt->bindParam("lastUpdatedDt", $time);
+			$stmt->execute();
+			$id = $db->lastInsertId();
+			$db = null;
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Successful', 'Id' => $id);
+
+		} catch(PDOException $e) {
+			error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+	} else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
+	}
+	
+	$response = $app->response();
+	$response['Content-Type'] = 'application/json';
+    	$response->body(json_encode($dataArray)); }
 ?>
