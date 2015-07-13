@@ -113,6 +113,7 @@ function updateConsumer(){
 	//$password = $update->password;
 
 	$bdate= $update->bdate;
+	
 	$height= $update->height;
 	$weight= $update->weight;
 	$address= $update->address;
