@@ -9,7 +9,8 @@ $app = new \Slim\Slim();
 $app->post('/registerconsumer','registerConsumer');
 $app->post('/login','loginConsumer');
 $app->post('/updateconsumer','updateConsumer');
-
+$app->post('/getcityrates','getCityRates');
+$app->post('/getuserdetails','getUserDetails');
 $app->run();
 
 function registerConsumer() {
@@ -100,7 +101,7 @@ function updateConsumer(){
 	$request = $app->request();
 	$update = json_decode($request->getBody());
 
-	error_log("something to get in update".$request->getBody(), 3, 'G:\xampp\php\logs\php.log');
+	error_log("something to get in update".$request->getBody(), 3, 'C:\xampp\php\logs\php.log');
 
 	$name = $update->name;
 	$phone = $update->phone;
@@ -137,7 +138,7 @@ function updateConsumer(){
 			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Successful', 'Id' => $id);
 
 		} catch(PDOException $e) {
-			error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
@@ -148,4 +149,68 @@ function updateConsumer(){
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray)); }
+
+	function getCityRates(){
+	$app = \Slim\Slim::getInstance();
+
+	$request = $app->request();
+	$update = json_decode($request->getBody());
+	$cityrateid= $update->cityrateid;
+	$cityname= $update->cityname;
+	$sql = "SELECT * FROM CITY_RATE where CITY_RATE_ID ='".$cityrateid."' and CITY_NAME ='".$cityname."'";
+	try {
+		$db = getDB();
+		$stmt = $db->query($sql);
+		$dataArray = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$db=null;
+		
+	}
+    
+		catch(PDOException $e) {
+	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+		$response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($dataArray)); 
+			
+		}
+     
+	 function getUserDetails()
+	 {  $app = \Slim\Slim::getInstance();
+
+	    $request = $app->request();
+	    $update = json_decode($request->getBody());
+		$phone = $update->phone;
+		$user = getUser($phone);
+
+	if ($user !=null) {
+			try {
+				$response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($user)); 
+				
+	}
+	catch(PDOException $e) {
+	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+	        $response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($user)); 
+	} }
+	else
+	{
+     $user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');		
+	    $response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($user)); 	
+	}
+		 
+		 
+	  }
+	
+
+
 ?>
