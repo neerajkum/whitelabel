@@ -11,6 +11,8 @@ $app->post('/login','loginConsumer');
 $app->post('/updateconsumer','updateConsumer');
 $app->post('/getcityrates','getCityRates');
 $app->post('/getuserdetails','getUserDetails');
+$app->post('/changepassword','changePassword');
+$app->post('/forgotpassword','forgotPassword');
 $app->run();
 
 function registerConsumer() {
@@ -38,6 +40,7 @@ function registerConsumer() {
 			$stmt->bindParam("phone", $phone);
 			$stmt->bindParam("email", $email);
 			$stmt->bindParam("password", $password);
+			date_default_timezone_set('Asia/Kolkata');
 			$time = date('Y/m/d H:i:s');
 			$stmt->bindParam("createdDt", $time);
 			$stmt->bindParam("lastUpdatedDt", $time);
@@ -69,6 +72,7 @@ function loginConsumer() {
 	$deviceOS = $update->deviceOS;
 	$osVersion = $update->osVersion;
 	$ip=$_SERVER['REMOTE_ADDR'];
+	date_default_timezone_set('Asia/Kolkata');
 	$time=time();
 
 	$user = checkUserNameAndPassword($phone, $password);
@@ -101,7 +105,7 @@ function updateConsumer(){
 	$request = $app->request();
 	$update = json_decode($request->getBody());
 
-	error_log("something to get in update".$request->getBody(), 3, 'C:\xampp\php\logs\php.log');
+	// error_log("something to get in update".$request->getBody(), 3, 'C:\xampp\php\logs\php.log');
 
 	$name = $update->name;
 	$phone = $update->phone;
@@ -117,25 +121,26 @@ function updateConsumer(){
 
 	if (authenticateConsumer($phone,$authKey)) {
 
-        $sql = "UPDATE CONSUMER SET NAME = :name, EMAIL_ADDRESS = :email, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
+        $sql = "UPDATE CONSUMER SET NAME = :name, EMAIL_ADDRESS = :email,BIRTH_DATE = :bdate, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
         try {
 			$db = getDB();
 			$stmt = $db->prepare($sql);
 			$stmt->bindParam("name", $name);
 			$stmt->bindParam("phone", $phone);
 			$stmt->bindParam("email", $email);
-			//$stmt->bindParam("password", $password);
+			$stmt->bindParam("bdate", $bdate);
                         $stmt->bindParam("height", $height);
                         $stmt->bindParam("weight", $weight);
                         $stmt->bindParam("address", $address);
                         $stmt->bindParam("gender", $gender);
+						date_default_timezone_set('Asia/Kolkata');
 			$time = date('Y/m/d H:i:s');
 			//$stmt->bindParam("createdDt", $time);
 			$stmt->bindParam("lastUpdatedDt", $time);
 			$stmt->execute();
 			$id = $db->lastInsertId();
 			$db = null;
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Successful', 'Id' => $id);
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated', 'Id' => $id);
 
 		} catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -183,7 +188,7 @@ function updateConsumer(){
 	    $request = $app->request();
 	    $update = json_decode($request->getBody());
 		$phone = $update->phone;
-		$user = getUser($phone);
+		$user = getUserProfile($phone);
 
 	if ($user !=null) {
 			try {
@@ -210,7 +215,124 @@ function updateConsumer(){
 		 
 		 
 	  }
+	  
+	  function changePassword()
+	  { $app = \Slim\Slim::getInstance();
+        $request = $app->request();
+	    $update = json_decode($request->getBody());
+        $phone = $update->phone;
+		$authKey= $update->authKey;
+		$oldpass= $update->oldpass;
+		$newpass= $update->newpass;
+		$connewpass= $update->connewpass;
+		if (authenticateConsumer($phone,$authKey) && checkUserNameAndPassword ($phone, $oldpass))
+			
+		{  if($newpass==$connewpass)
+			{ $sql = "UPDATE CONSUMER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
+		try
+				{ $db = getDB();
+			      $stmt = $db->prepare($sql);
+			      $stmt->bindParam("newpass", $newpass);
+				  date_default_timezone_set('Asia/Kolkata');
+			      $time = date('Y/m/d H:i:s');
+			      $stmt->bindParam("lastUpdatedDt", $time);
+				  $stmt->bindParam("phone", $phone);
+			      $stmt->execute();
+			      $id = $db->lastInsertId();
+			      $db = null;
+			      $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Password Successfully Updated', 'Id' => $id);
+					
+				}
+				catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+			}
+			else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'New Password and Confirm Password does not match');
+	}
 	
+		}
+		else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Incorrect Current Password. If you are using our mobile app, please contact 9873805309');
+	}
 
+	$response = $app->response();
+	$response['Content-Type'] = 'application/json';
+    $response->body(json_encode($dataArray));
+	  }
+	  
+	  function forgotPassword()
+	  { $app = \Slim\Slim::getInstance();
+        $request = $app->request();
+	    $update = json_decode($request->getBody());
+		$phone = $update->phone;
+		if(getUser($phone))
+		{ $newpass=randomPassword();
+	      
+	     $sql = "SELECT EMAIL_ADDRESS FROM CONSUMER where PHONE_NUM ='".$phone."' ";
+		 $sql1="UPDATE CONSUMER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
+	try
+			{ $db = getDB();
+		$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$email = $stmt->fetchColumn(3);
+		$stmt = $db->prepare($sql1);
+			      $stmt->bindParam("newpass", $newpass);
+				  date_default_timezone_set('Asia/Kolkata');
+			      $time = date('Y/m/d H:i:s');
+			      $stmt->bindParam("lastUpdatedDt", $time);
+				  $stmt->bindParam("phone", $phone);
+				  $stmt->bindParam("newpass", $newpass);
+			      $stmt->execute();
+			      $id = $db->lastInsertId();
+			      $db = null;
+
+    
+    $from = "thepoweryoga@gmail.com";
+    $subject = "Your Password Has been reset"; 
+    $message = "Hi, we have reset your password. 
+
+    Your New Password is: $newpass 
+
+   LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD
+    Once logged in you can change your password 
+
+    Thanks! 
+    Admin YOM
+
+    This is an automated response, DO NOT REPLY!"; 
+
+   $headers = "From: $from\r\n";
+        $headers .= "Content-type: text/html\r\n";
+       
+        mail($email, $subject, $message, $headers);
+		
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'A New Password Has been sent to your registered mail id', 'Id' => $id);	
+				
+			}
+			catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+			}
+			else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Given Phone Number is not registered !!');
+	}
+			$response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($dataArray));
+			
+			
+		}
+		  
+		  
+		  
+		  
+		  
+		  
+	  
 
 ?>

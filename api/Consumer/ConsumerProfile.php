@@ -2,7 +2,22 @@
 include 'db.php';
 
 function getUser($username) {
-	$sql = "SELECT * FROM CONSUMER where PHONE_NUM ='".$username."'";
+	$sql = "SELECT  FROM CONSUMER where PHONE_NUM ='".$username."'";
+	try {
+		$db = getDB();
+		$stmt = $db->query($sql);
+		$users = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$db = null;
+		return $users;
+	} catch(PDOException $e) {
+	    error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		echo '{"error":{"text":'. $e->getMessage() .'}}';
+		return null;
+	}
+}
+
+function getUserProfile($username) {
+	$sql = "SELECT NAME,PHONE_NUM,EMAIL_ADDRESS,BIRTH_DATE,HEIGHT,WEIGHT,ADDRESS,GENDER FROM CONSUMER where PHONE_NUM ='".$username."'";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
@@ -117,5 +132,14 @@ function authenticateConsumer ($username, $consumerAuthKey) {
 	} else {
 		return false;
 	}
+}
+function randomPassword() {
+   $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < 10; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
 }
 ?>
