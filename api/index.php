@@ -329,6 +329,43 @@ function updateConsumer(){
 			
 		}
 		  
+		
+		function getMySchedule()
+		{
+			$app = \Slim\Slim::getInstance();
+            $request = $app->request();
+	        $update = json_decode($request->getBody());
+			$phone = $update->phone;
+		$schedule = getUserSchedule($phone);
+
+	if ($schedule !=null) {
+			try {
+				$response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($schedule)); 
+				
+	}
+	catch(PDOException $e) {
+	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+	        $response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($schedule)); 
+	} }
+	else
+	{
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'No Schedule Found');		
+	    $response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($schedule)); 	
+	}
+		 
+		 
+	  }
+			
+			
+		}
 		  
 		  
 		  

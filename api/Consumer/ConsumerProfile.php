@@ -142,4 +142,9 @@ function randomPassword() {
     }
     return $randomString;
 }
+
+function getUserSchedule($phone)
+{
+	
+}
 ?>
