@@ -143,8 +143,19 @@ function randomPassword() {
     return $randomString;
 }
 
-function getUserSchedule($phone)
-{
+function getUserSchedule($username)
+{ $sql = "SELECT csd.SCHEDULE_DATE,csd.START_TIME,csd.END_TIME,cs.TYPE_OF_SERVICE,cs.VENUE,p.NAME,p.PHONE_NUM,csd.CLASS_STATUS FROM CONSUMER c,CONSUMER_SCHEDULE cs,CONSUMER_SCHEDULE_DATE csd,PROVIDER p,CONSUMER_PROVIDER_MAP cpm where  c.PHONE_NUM ='".$username."' and c.CONSUMER_ID=cs.CONSUMER_ID and cs.CONSUMER_SCHEDULE_ID=csd.CONSUMER_SCHEDULE_ID and csd.CONSUMER_SCHEDULE_ID=cpm.CONSUMER_SCHEDULE_ID and cpm.PROVIDER_ID=p.PROVIDER_ID";
+	try {
+		$db = getDB();
+		$stmt = $db->query($sql);
+		$schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$db = null;
+		return $schedule;
+	} catch(PDOException $e) {
+	  //  error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		echo '{"error":{"text":'. $e->getMessage() .'}}';
+		return null;
+	}
 	
 }
 ?>

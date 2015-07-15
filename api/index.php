@@ -13,6 +13,7 @@ $app->post('/getcityrates','getCityRates');
 $app->post('/getuserdetails','getUserDetails');
 $app->post('/changepassword','changePassword');
 $app->post('/forgotpassword','forgotPassword');
+$app->post('/getmyschedule','getMySchedule');
 $app->run();
 
 function registerConsumer() {
@@ -336,8 +337,11 @@ function updateConsumer(){
             $request = $app->request();
 	        $update = json_decode($request->getBody());
 			$phone = $update->phone;
+			$authKey= $update->authKey;
+			if (authenticateConsumer($phone,$authKey)) {
 		$schedule = getUserSchedule($phone);
-
+		
+    
 	if ($schedule !=null) {
 			try {
 				$response = $app->response();
@@ -363,9 +367,18 @@ function updateConsumer(){
 		 
 		 
 	  }
-			
-			
+	  else
+	{
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');		
+	    $response = $app->response();
+	    $response['Content-Type'] = 'application/json';
+		$response->body(json_encode($schedule)); 	
+	}
+	  
 		}
+			
+			
+		
 		  
 		  
 		  
