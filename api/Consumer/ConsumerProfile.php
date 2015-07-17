@@ -1,8 +1,8 @@
 <?php
-include 'db.php';
+include_once 'db.php';
 
 function getUser($username) {
-	$sql = "SELECT  FROM CONSUMER where PHONE_NUM ='".$username."'";
+	$sql = "SELECT * FROM CONSUMER where PHONE_NUM ='".$username."'";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
@@ -10,7 +10,7 @@ function getUser($username) {
 		$db = null;
 		return $users;
 	} catch(PDOException $e) {
-	    error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		return null;
 	}
@@ -25,11 +25,13 @@ function getUserProfile($username) {
 		$db = null;
 		return $users;
 	} catch(PDOException $e) {
-	    error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		return null;
 	}
 }
+
+
 
 function checkUserNameAndPassword ($username, $password) {
 	$sql = "SELECT * FROM CONSUMER where PHONE_NUM ='".$username."' and PASSWORD ='".$password."'";
@@ -40,7 +42,7 @@ function checkUserNameAndPassword ($username, $password) {
 		$db = null;
 		//return $users;
 	} catch(PDOException $e) {
-		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		$userrs =  null;
 	}
@@ -56,7 +58,7 @@ function getConsumerLoginForUser ($consumerId) {
 		$consumerLogin = $stmt->fetchAll(PDO::FETCH_OBJ);
 		$db = null;
 	} catch(PDOException $e) {
-		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		$consumerLogin =  null;
 	}
@@ -80,7 +82,7 @@ function updateInConsumerLogin ($consumerLoginId, $consumerAuthKey, $pushDeviceI
 		$db = null;
 		//return $users;
 	} catch(PDOException $e) {
-		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 	}
 
@@ -105,7 +107,7 @@ function insertInConsumerLogin ($consumerId, $consumerAuthKey, $pushDeviceId, $d
 		$db = null;
 		//return $users;
 	} catch(PDOException $e) {
-		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		$consumerLoginId = null;
 	}
@@ -122,7 +124,7 @@ function authenticateConsumer ($username, $consumerAuthKey) {
 		$db = null;
 		//return $users;
 	} catch(PDOException $e) {
-		error_log($e->getMessage(), 3, 'G:\xampp\php\logs\php.log');
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
 		$authenticatedUser = null;
 	}
