@@ -350,8 +350,10 @@ function updateConsumer(){
 	        $update = json_decode($request->getBody());
 			$phone = $update->phone;
 			$authKey= $update->authKey;
+			$start_date= $update->start_date;
+			$end_date= $update->end_date;
 			if (authenticateConsumer($phone,$authKey)) {
-		$schedule = getUserSchedule($phone);
+		$schedule = getUserSchedule($phone, $start_date, $end_date);
 		
     
 	if ($schedule !=null) {
@@ -496,9 +498,18 @@ function updateProvider(){
 	$batch_end= $update->batch_end;
 	$experience= $update->experience;
 	if (authenticateProvider($phone,$authKey)) {
+		
 
         $sql = "UPDATE PROVIDER SET NAME = :name, EMAIL_ADDRESS = :email,BIRTH_DATE = :bdate, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, EXPERIENCE =:experience, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
-        $sql1="INSERT INTO QUALIFICATION (PROVIDER_ID,DEGREE,INSTITUTE,COURSE_TYPE,BATCH_START,BATCH_END) SELECT PROVIDER.PROVIDER_ID,:degree,:institute,:course_type,:batch_start,batch_end FROM PROVIDER where PROVIDER.PHONE_NUM='".$phone."'" ; 
+        $sql1="INSERT INTO QUALIFICATION (PROVIDER_ID, DEGREE, INSTITUTE, COURSE_TYPE, BATCH_START, BATCH_END) VALUES (:providerId, :degree, :institute, :course_type, :batch_start, :batch_end) " ; 
+		$sql2 = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."' ";
+		 
+	
+	    $db = getDB();
+		$stmt = $db->query($sql2);
+		$stmt->bindParam("phone", $phone);
+		$providerId = $stmt->fetchColumn(0);
+		$db=null;
 		try {
 			$db = getDB();
 			$stmt = $db->prepare($sql);
@@ -506,18 +517,28 @@ function updateProvider(){
 			$stmt->bindParam("phone", $phone);
 			$stmt->bindParam("email", $email);
 			$stmt->bindParam("bdate", $bdate);
+			
                         $stmt->bindParam("height", $height);
                         $stmt->bindParam("weight", $weight);
                         $stmt->bindParam("address", $address);
                         $stmt->bindParam("gender", $gender);
-						$stmt->bindParam("qualification", $qualification);
+						//$stmt->bindParam("qualification", $qualification);
 						$stmt->bindParam("experience", $experience);
 						date_default_timezone_set('Asia/Kolkata');
 			$time = date('Y/m/d H:i:s');
 			//$stmt->bindParam("createdDt", $time);
 			$stmt->bindParam("lastUpdatedDt", $time);
 			$stmt->execute();
+			$stmt = $db->prepare($sql1);
+			$stmt->bindParam("providerId", $providerId);
+			$stmt->bindParam("degree", $degree);
+			$stmt->bindParam("institute", $institute);
+			$stmt->bindParam("course_type",$course_type);
+			$stmt->bindParam("batch_start", $batch_start);
+			$stmt->bindParam("batch_end", $batch_end);
+			$stmt->execute();
 			$db = null;
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated');
 			
 
 		} catch(PDOException $e) {
@@ -525,23 +546,7 @@ function updateProvider(){
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
-		try
-		{$db = getDB();
-			$stmt = $db->prepare($sql1);
-			$stmt->bindParam("degree", $degree);
-			$stmt->bindParam("phone", $phone);
-			$stmt->bindParam("institute", $institute);
-			$stmt->bindParam("course_type",$course_type);
-			$stmt->bindParam("batch_start", $batch_start);
-			$stmt->bindParam("batch_end", $batch_end);
-			$stmt->execute();
-			$db = null;
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated');}
-			catch(PDOException $e) {
-			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
-			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
-			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => ' We are unable to server your request at present. Kindly contact us at 9873805309');
-		}
+		
 			
 	} else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
@@ -856,34 +861,66 @@ function changePasswordPro()
 	     $update = json_decode($request->getBody());
 		  $phone = $update->phone;
 		  $authKey= $update->authKey;
-		 /* $venue= $update->venue;
+		 $venue= $update->venue;
 		  $venue_lat= $update->venue_lat;
 		  $venue_long= $update->venue_long;
 		  $start_date= $update->start_date;
 		  $end_date= $update->end_date;
-		  $start_time= $update->start_time;
-		  $end_time= $update->end_time;
-		  $days= $update->days; */
+		 $start_time= $update->start_time;
+		 $end_time= $update->end_time;
+		 $days= $update->days; 
+		 $mon=$days[0];
+		  $tue=$days[1];
+		  $wed=$days[2];
+		  $thurs=$days[3];
+		  $fri=$days[4];
+		  $sat=$days[5];
+		  $sun=$days[6]; 
 		  if(authenticateConsumer($phone,$authKey))
 		  { $sql = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$phone."'";
+	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('CONSUMER', :consumer_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
 	        try
 			{ $db = getDB();
 		$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
 		$consumer_id = $stmt->fetchColumn(0);
-			$db=null; }
+		$stmt = $db->prepare($sql1);
+		$stmt->bindParam("consumer_id", $consumer_id);
+		$stmt->bindParam("venue", $venue);
+		$stmt->bindParam("venue_lat", $venue_lat);
+		$stmt->bindParam("venue_long", $venue_long);
+		$stmt->bindParam("start_date", $start_date);
+		$stmt->bindParam("end_date", $end_date);
+		$stmt->bindParam("mon", $mon);
+		$stmt->bindParam("tue", $tue);
+		$stmt->bindParam("wed", $wed);
+		$stmt->bindParam("thurs", $thurs);
+		$stmt->bindParam("fri", $fri);
+		$stmt->bindParam("sat", $sat);
+		$stmt->bindParam("sun", $sun); 
+		
+			  $stmt->execute();
+			  $scheduleId = $db->lastInsertId();
+			  $db=null;
+			  createScheduleDate($start_date, $start_time, $end_time, $days, $scheduleId);
+			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been successfully booked'); }
 			catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
 		
+		
 			  
 			  
 		  }
+		  else
+		{  $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
+			
+		}
 		  $response = $app->response();
 	        $response['Content-Type'] = 'application/json';
-            $response->body(json_encode($consumer_id));
+            $response->body(json_encode($dataArray));
 		  
 			
 			

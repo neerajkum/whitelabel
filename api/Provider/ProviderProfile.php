@@ -30,7 +30,6 @@ function getPUserProfile($username) {
 }
 
 
-
 function checkPUserNameAndPassword ($username, $password) {
 	$sql = "SELECT * FROM PROVIDER where PHONE_NUM ='".$username."' and PASSWORD ='".$password."'";
 	try {
