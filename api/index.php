@@ -24,6 +24,7 @@ $app->post('/getpendingrequest','getPendingRequest');
 $app->post('/updaterequest','updateRequest');
 $app->post('/welcomeconsumer','welcomeConsumer');
 $app->post('/welcomeprovider','welcomeProvider');
+$app->post('/addclass','addClass');
 $app->run();
 
 function registerConsumer() {
@@ -849,25 +850,40 @@ function changePasswordPro()
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($user));
 		}
-		function BookClass()
+		function addClass()
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
-	      $update = json_decode($request->getBody());
+	     $update = json_decode($request->getBody());
 		  $phone = $update->phone;
 		  $authKey= $update->authKey;
-		  $venue= $update->venue;
+		 /* $venue= $update->venue;
 		  $venue_lat= $update->venue_lat;
 		  $venue_long= $update->venue_long;
 		  $start_date= $update->start_date;
 		  $end_date= $update->end_date;
 		  $start_time= $update->start_time;
 		  $end_time= $update->end_time;
-		  //Statement to recieve days of week
-		  if(authenticateConsumer())
-		  { 
+		  $days= $update->days; */
+		  if(authenticateConsumer($phone,$authKey))
+		  { $sql = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$phone."'";
+	        try
+			{ $db = getDB();
+		$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$consumer_id = $stmt->fetchColumn(0);
+			$db=null; }
+			catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+		
 			  
 			  
 		  }
+		  $response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($consumer_id));
 		  
 			
 			
