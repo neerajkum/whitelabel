@@ -21,6 +21,9 @@ $app->post('/changepasswordpro','changePasswordPro');
 $app->post('/forgotpasswordpro','forgotPasswordPro');
 $app->post('/getmyschedulepro','getMySchedulePro');
 $app->post('/getpendingrequest','getPendingRequest');
+$app->post('/updaterequest','updateRequest');
+$app->post('/welcomeconsumer','welcomeConsumer');
+$app->post('/welcomeprovider','welcomeProvider');
 $app->run();
 
 function registerConsumer() {
@@ -485,12 +488,17 @@ function updateProvider(){
 	$address= $update->address;
 	$gender= $update->gender;
 	$authKey= $update->authKey;
-    $qualification= $update->qualification;
+	$degree= $update->degree;
+	$institute= $update->institute;
+	$course_type= $update->course_type;
+	$batch_start= $update->batch_start;
+	$batch_end= $update->batch_end;
 	$experience= $update->experience;
 	if (authenticateProvider($phone,$authKey)) {
 
-        $sql = "UPDATE PROVIDER SET NAME = :name, EMAIL_ADDRESS = :email,BIRTH_DATE = :bdate, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, QULIFICATION =:qualification, EXPERIENCE =:experience, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
-        try {
+        $sql = "UPDATE PROVIDER SET NAME = :name, EMAIL_ADDRESS = :email,BIRTH_DATE = :bdate, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, EXPERIENCE =:experience, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
+        $sql1="INSERT INTO QUALIFICATION (PROVIDER_ID,DEGREE,INSTITUTE,COURSE_TYPE,BATCH_START,BATCH_END) SELECT PROVIDER.PROVIDER_ID,:degree,:institute,:course_type,:batch_start,batch_end FROM PROVIDER where PROVIDER.PHONE_NUM='".$phone."'" ; 
+		try {
 			$db = getDB();
 			$stmt = $db->prepare($sql);
 			$stmt->bindParam("name", $name);
@@ -509,13 +517,31 @@ function updateProvider(){
 			$stmt->bindParam("lastUpdatedDt", $time);
 			$stmt->execute();
 			$db = null;
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated');
+			
 
 		} catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
+		try
+		{$db = getDB();
+			$stmt = $db->prepare($sql1);
+			$stmt->bindParam("degree", $degree);
+			$stmt->bindParam("phone", $phone);
+			$stmt->bindParam("institute", $institute);
+			$stmt->bindParam("course_type",$course_type);
+			$stmt->bindParam("batch_start", $batch_start);
+			$stmt->bindParam("batch_end", $batch_end);
+			$stmt->execute();
+			$db = null;
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated');}
+			catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => ' We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+			
 	} else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
 	}
@@ -589,7 +615,6 @@ function changePasswordPro()
 			      $time = date('Y/m/d H:i:s');
 			      $stmt->bindParam("lastUpdatedDt", $time);
 				  $stmt->bindParam("phone", $phone);
-				  $stmt->bindParam("newpass", $newpass);
 			      $stmt->execute();
 			      $db = null;
 
@@ -687,7 +712,7 @@ function changePasswordPro()
 
 	$request = $app->request();
 	$update = json_decode($request->getBody());
-	$sql = "SELECT cs.START_DATE,cs.END_DATE,c.NAME,cs.VENUE,csd.START_TIME,csd.END_TIME FROM CONSUMER c,CONSUMER_SCHEDULE cs,CONSUMER_SCHEDULE_DATE csd,CONSUMER_PROVIDER_MAP cpm where csm.MAP_STATUS="Pending",c.CONSUMER_ID=cs.CONSUMER_ID and cs.CONSUMER_SCHEDULE_ID=csd.CONSUMER_SCHEDULE_ID and csd.CONSUMER_SCHEDULE_ID=cpm.CONSUMER_SCHEDULE_ID ";
+	$sql = "SELECT cs.START_DATE,cs.END_DATE,c.NAME,cs.VENUE,csd.START_TIME,csd.END_TIME FROM CONSUMER c,CONSUMER_SCHEDULE cs,CONSUMER_SCHEDULE_DATE csd,CONSUMER_PROVIDER_MAP cpm where csm.MAP_STATUS='Pending',c.CONSUMER_ID=cs.CONSUMER_ID and cs.CONSUMER_SCHEDULE_ID=csd.CONSUMER_SCHEDULE_ID and csd.CONSUMER_SCHEDULE_ID=cpm.CONSUMER_SCHEDULE_ID ";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
@@ -702,7 +727,151 @@ function changePasswordPro()
 		  $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
 		$response->body(json_encode($requests)); 	
-		}	  
+		}
+
+ 		function updateRequest()
+		{ $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	      $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $authKey= $update->authKey;
+		  $map_status= $update->map_status;
+		  $con_phone= $update->con_phone;
+		  //Write Statement to Recieve days from app side
+		  if(authenticateProvider($phone,$authKey))
+		  {  if($map_status=='1')
+			  { $sql="UPDATE CONSUMER_PROVIDER_MAP SET MAP_STATUS= :map_status where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID";
+		        $sql1="DELETE FROM CONSUMER_PROVIDER_MAP where NOT(MAP_STATUS='1') and CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID"; 
+				$sql2="INSERT INTO PROVIDER_SCHEDULE (CLIENT_NAME,CLIENT_PHN,VENUE,VENUE_LAT,VENUE_LONG,START_DATE,END_DATE) VALUES (CONSUMER.NAME,CONSUMER.PHONE_NUM,CONSUMER_SCHEDULE.VENUE,CONSUMER_SCHEDULE.VENUE_LAT,CONSUMER_SCHEDULE.VENUE_LONG,CONSUMER_SCHEDULE.START_DATE,CONSUMER_SCHEDULE.END_DATE) where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID and PROVIDER_SCHEDULE.PROVIDER_ID=PROVIDER.PROVIDER_ID";
+				//query for inserting dates into PROVIDER_SCHEDULE_DATE table using daysofweek() function. link for inserting dates: http://stackoverflow.com/questions/30542562/insert-number-of-rows-based-on-start-and-end-date
+				try
+			{ $db = getDB();
+		      $stmt = $db->query($sql);
+		      $stmt->bindParam("phone", $phone);
+			  $stmt->bindParam("map_status", $map_status);
+			  $stmt->bindParam("con_phone", $con_phone);
+			  $stmt->execute();
+			  $stmt = $db->query($sql1);
+		      $stmt->bindParam("phone", $phone);
+			  $stmt->bindParam("map_status", $map_status);
+			  $stmt->bindParam("con_phone", $con_phone);
+			  $stmt->execute();
+			  $stmt = $db->query($sql2);
+		      $stmt->bindParam("phone", $phone);
+			  $stmt->bindParam("map_status", $map_status);
+			  $stmt->bindParam("con_phone", $con_phone);
+			  $stmt->execute();
+			  $db=null;
+			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been accepted and schedule is updated');
+			  }
+			  catch(PDOException $e) {
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		
+			  } }
+	else if(map_status=="rejected")
+	{ $sql="UPDATE CONSUMER_PROVIDER_MAP SET MAP_STATUS= :map_status where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID";
+	try
+			{ $db = getDB();
+		      $stmt = $db->query($sql);
+		      $stmt->bindParam("phone", $phone);
+			  $stmt->bindParam("map_status", $map_status);
+			  $stmt->bindParam("con_phone", $con_phone);
+			  $stmt->execute();
+			  $db=null;
+			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been rejected');
+			}
+			 catch(PDOException $e) {
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		
+			  }
+	}
+	
+			  
+			  
+		  }
+			else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Incorrect Current Password or Auth Key. If you are using our mobile app, please contact 9873805309');
+	}
+
+	$response = $app->response();
+	$response['Content-Type'] = 'application/json';
+    $response->body(json_encode($dataArray));
+	  
+		}
+		
+		function welcomeConsumer()
+		{ $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	      $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $sql="SELECT NAME,ADDRESS from CONSUMER where PHONE_NUM='".$phone."'";
+		 try
+         { 
+		      $db = getDB();
+		      $stmt = $db->query($sql);
+		      $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+		      $db = null;  
+			 
+		 }		 
+		 catch(PDOException $e) {
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		
+			  }
+			  
+			$response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($user));
+		}
+		function welcomeProvider()
+		{ $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	      $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $sql="SELECT NAME,ADDRESS from PROVIDER where PHONE_NUM='".$phone."'";
+		 try
+         { 
+		      $db = getDB();
+		      $stmt = $db->query($sql);
+		      $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+		      $db = null;  
+			 
+		 }		 
+		 catch(PDOException $e) {
+	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		
+			  }
+			  
+			$response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($user));
+		}
+		function BookClass()
+		{ $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	      $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $authKey= $update->authKey;
+		  $venue= $update->venue;
+		  $venue_lat= $update->venue_lat;
+		  $venue_long= $update->venue_long;
+		  $start_date= $update->start_date;
+		  $end_date= $update->end_date;
+		  $start_time= $update->start_time;
+		  $end_time= $update->end_time;
+		  //Statement to recieve days of week
+		  if(authenticateConsumer())
+		  { 
+			  
+			  
+		  }
+		  
+			
+			
+		}
 	  
 
 ?>
