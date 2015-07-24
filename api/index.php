@@ -25,6 +25,8 @@ $app->post('/updaterequest','updateRequest');
 $app->post('/welcomeconsumer','welcomeConsumer');
 $app->post('/welcomeprovider','welcomeProvider');
 $app->post('/addclass','addClass');
+$app->post('/createproviderschedule','createProviderSchedule');
+$app->post('/viewmyclients','viewMyClients');
 $app->run();
 
 function registerConsumer() {
@@ -672,8 +674,10 @@ function changePasswordPro()
 	        $update = json_decode($request->getBody());
 			$phone = $update->phone;
 			$authKey= $update->authKey;
+			$start_date= $update->start_date;
+			$end_date= $update->end_date;
 			if (authenticateProvider($phone,$authKey)) {
-		$schedule = getPUserSchedule($phone);
+		$schedule = getPUserSchedule($phone, $start_date, $end_date);
 		
     
 	if ($schedule !=null) {
@@ -925,6 +929,123 @@ function changePasswordPro()
 			
 			
 		}
+		
+		function createProviderSchedule()
+		{ $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	     $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $authKey= $update->authKey;
+		  $name= $update->name;
+		  $con_phone= $update->con_phone;
+		 $venue= $update->venue;
+		  $venue_lat= $update->venue_lat;
+		  $venue_long= $update->venue_long;
+		  $start_date= $update->start_date;
+		  $end_date= $update->end_date;
+		 $start_time= $update->start_time;
+		 $end_time= $update->end_time;
+		 $days= $update->days; 
+		 $mon=$days[0];
+		  $tue=$days[1];
+		  $wed=$days[2];
+		  $thurs=$days[3];
+		  $fri=$days[4];
+		  $sat=$days[5];
+		  $sun=$days[6]; 
+		  
+		  if(authenticateProvider($phone,$authKey))
+		  { $con_id=InsertConsumerByProvider($name, $con_phone, $venue);
+	        if($con_id!=null)
+			{
 	  
-
+	        $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
+	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, PROVIDER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('PROVIDER', :consumer_id, :provider_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
+	        try
+			{ $db = getDB();
+		$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$provider_id = $stmt->fetchColumn(0);
+		$stmt = $db->prepare($sql1);
+		$stmt->bindParam("consumer_id", $con_id);
+		$stmt->bindParam("provider_id", $provider_id);
+		$stmt->bindParam("venue", $venue);
+		$stmt->bindParam("venue_lat", $venue_lat);
+		$stmt->bindParam("venue_long", $venue_long);
+		$stmt->bindParam("start_date", $start_date);
+		$stmt->bindParam("end_date", $end_date);
+		$stmt->bindParam("mon", $mon);
+		$stmt->bindParam("tue", $tue);
+		$stmt->bindParam("wed", $wed);
+		$stmt->bindParam("thurs", $thurs);
+		$stmt->bindParam("fri", $fri);
+		$stmt->bindParam("sat", $sat);
+		$stmt->bindParam("sun", $sun); 
+		
+			  $stmt->execute();
+			  $scheduleId = $db->lastInsertId();
+			  $db=null;
+			  createScheduleDate($start_date, $start_time, $end_time, $days, $scheduleId);
+			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Schedule has been successfully uploaded'); }
+			catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		}
+		
+		
+			  
+			}
+           else
+           {
+			   $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		   }			   
+		  }
+		  else
+		{  $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
+			
+		}
+		  $response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($dataArray));
+		  
+			
+			
+		}
+	  
+	  function viewMyClients()
+	  { $app = \Slim\Slim::getInstance();
+          $request = $app->request();
+	     $update = json_decode($request->getBody());
+		  $phone = $update->phone;
+		  $authKey= $update->authKey;
+		  if(authenticateProvider($phone, $authKey))
+		  {
+		  $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
+		  $db = getDB();
+		$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$db=null;
+		$provider_id = $stmt->fetchColumn(0);
+		  $sql1 = "SELECT c.NAME, c.PHONE_NUM, c.ADDRESS, cs.START_DATE, cs.END_DATE FROM CONSUMER c, CONSUMER_SCHEDULE cs where cs.PROVIDER_ID ='".$provider_id."' and cs.CONSUMER_ID = c.CONSUMER_ID ";
+		  try
+			{ $db = getDB();
+			$stmt = $db->query($sql1);
+		   $myClients = $stmt->fetchAll(PDO::FETCH_OBJ);
+		    $db=null;
+			}
+			catch(PDOException $e) {
+			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$myClients = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		  } }
+		  else
+		  {
+			  $myClients = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
+			  
+		  }
+            $response = $app->response();
+	        $response['Content-Type'] = 'application/json';
+            $response->body(json_encode($myClients));		  
+	  }
 ?>

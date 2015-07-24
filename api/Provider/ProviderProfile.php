@@ -1,5 +1,6 @@
 <?php
 include_once 'db.php';
+include_once 'Consumer/ConsumerProfile.php';
 function getPUser($username) {
 	$sql = "SELECT *  FROM PROVIDER where PHONE_NUM ='".$username."'";
 	try {
@@ -134,21 +135,49 @@ function authenticateProvider ($username, $providerAuthKey) {
 }
 
 
-function getPUserSchedule($username)
-{ $sql = "SELECT psd.SCHEDULE_DATE,ps.CLIENT_NAME,ps.CLIENT_PHN,psd.START_TIME,psd.END_TIME,ps.VENUE,psd.CLASS_STATUS FROM PROVIDER p,PROVIDER_SCHEDULE ps,PROVIDER_SCHEDULE_DATE psd where  p.PHONE_NUM ='".$username."' and p.PROVIDER_ID=ps.PROVIDER_ID and ps.PROVIDER_SCHEDULE_ID=psd.PROVIDER_SCHEDULE_ID ";
-	try {
-		$db = getDB();
-		$stmt = $db->query($sql);
-		$schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
-		$db = null;
-		return $schedule;
-	} catch(PDOException $e) {
-	  //  error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
-		echo '{"error":{"text":'. $e->getMessage() .'}}';
-		return null;
-	}
-	
+function getPUserSchedule($username, $startDate, $endDate)
+{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, PROVIDER p where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.PROVIDER_ID=p.PROVIDER_ID and p.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+       $db = getDB();
+	   $stmt = $db->query($sql1);
+	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
+	   return $schedule;
+	  
 }
+
+function InsertConsumerByProvider($name, $phone, $address)
+{ 
+$user = getUser($phone);
+
+	if ($user !=null) {
+			$sql = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM='".$phone."'";
+			$db = getDB();
+			$stmt = $db->query($sql);
+		    $id = $stmt->fetchColumn(0);
+	} 
+else {
+$sql = "INSERT INTO CONSUMER (NAME, PHONE_NUM, EMAIL_ADDRESS, PASSWORD, ADDRESS, CREATED_DT, LAST_UPDATED_DT) VALUES (:name, :phone, 'email', 'password', :address, :createdDt, :lastUpdatedDt)";
+		try {
+			$db = getDB();
+			$stmt = $db->prepare($sql);
+			$stmt->bindParam("name", $name);
+			$stmt->bindParam("phone", $phone);
+			$stmt->bindParam("address", $address);
+			date_default_timezone_set('Asia/Kolkata');
+			$time = date('Y/m/d H:i:s');
+			$stmt->bindParam("createdDt", $time);
+			$stmt->bindParam("lastUpdatedDt", $time);
+			$stmt->execute();
+			$id = $db->lastInsertId();
+			$db = null;
+		    
+
+		} catch(PDOException $e) {
+			error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$id= null;
+} }
+		return $id;
+	}
 
 
 ?>
