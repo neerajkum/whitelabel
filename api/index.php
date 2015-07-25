@@ -722,11 +722,11 @@ function changePasswordPro()
 
 	$request = $app->request();
 	$update = json_decode($request->getBody());
-	$sql = "SELECT cs.START_DATE,cs.END_DATE,c.NAME,cs.VENUE,csd.START_TIME,csd.END_TIME FROM CONSUMER c,CONSUMER_SCHEDULE cs,CONSUMER_SCHEDULE_DATE csd,CONSUMER_PROVIDER_MAP cpm where csm.MAP_STATUS='Pending',c.CONSUMER_ID=cs.CONSUMER_ID and cs.CONSUMER_SCHEDULE_ID=csd.CONSUMER_SCHEDULE_ID and csd.CONSUMER_SCHEDULE_ID=cpm.CONSUMER_SCHEDULE_ID ";
+	$sql = "SELECT  cs.START_DATE,  cs.END_DATE,  c.NAME, c.PHONE_NUM,  cs.VENUE, csd.START_TIME, csd.SCHEDULE_ID, csd.END_TIME FROM CONSUMER_SCHEDULE cs, CONSUMER c, CONSUMER_SCHEDULE_DATE csd where cs.PROVIDER_ID IS null and c.CONSUMER_ID = cs.CONSUMER_ID and cs.SCHEDULE_ID = csd.SCHEDULE_ID group by csd.SCHEDULE_ID ";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
-		$request = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$requests = $stmt->fetchAll(PDO::FETCH_OBJ);
 		$db = null;
 		
 	} catch(PDOException $e) {
@@ -739,7 +739,7 @@ function changePasswordPro()
 		$response->body(json_encode($requests)); 	
 		}
 
- 		function updateRequest()
+ 		function updateRequest() 
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
 	      $update = json_decode($request->getBody());
@@ -747,46 +747,61 @@ function changePasswordPro()
 		  $authKey= $update->authKey;
 		  $map_status= $update->map_status;
 		  $con_phone= $update->con_phone;
-		  //Write Statement to Recieve days from app side
-		  if(authenticateProvider($phone,$authKey))
-		  {  if($map_status=='1')
-			  { $sql="UPDATE CONSUMER_PROVIDER_MAP SET MAP_STATUS= :map_status where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID";
-		        $sql1="DELETE FROM CONSUMER_PROVIDER_MAP where NOT(MAP_STATUS='1') and CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID"; 
-				$sql2="INSERT INTO PROVIDER_SCHEDULE (CLIENT_NAME,CLIENT_PHN,VENUE,VENUE_LAT,VENUE_LONG,START_DATE,END_DATE) VALUES (CONSUMER.NAME,CONSUMER.PHONE_NUM,CONSUMER_SCHEDULE.VENUE,CONSUMER_SCHEDULE.VENUE_LAT,CONSUMER_SCHEDULE.VENUE_LONG,CONSUMER_SCHEDULE.START_DATE,CONSUMER_SCHEDULE.END_DATE) where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID and PROVIDER_SCHEDULE.PROVIDER_ID=PROVIDER.PROVIDER_ID";
-				//query for inserting dates into PROVIDER_SCHEDULE_DATE table using daysofweek() function. link for inserting dates: http://stackoverflow.com/questions/30542562/insert-number-of-rows-based-on-start-and-end-date
-				try
+		  $schedule_id= $update->schedule_id;
+		  		  if(authenticateProvider($phone,$authKey))
+		  {  if($map_status=="accepted")
+			  {   $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
+		  $sql1 = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$con_phone."'";
+		  $sql2="INSERT INTO CONSUMER_PROVIDER_MAP (SCHEDULE_ID, CONSUMER_ID, PROVIDER_ID, MAP_STATUS) VALUES (:schedule_id, :consumer_id, :provider_id, :map_status) ";
+          $sql3="UPDATE CONSUMER_SCHEDULE SET PROVIDER_ID =:provider_id WHERE SCHEDULE_ID =:schedule_id";
+        try
 			{ $db = getDB();
-		      $stmt = $db->query($sql);
-		      $stmt->bindParam("phone", $phone);
-			  $stmt->bindParam("map_status", $map_status);
-			  $stmt->bindParam("con_phone", $con_phone);
+			$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$provider_id = $stmt->fetchColumn(0);
+		
+		$stmt = $db->query($sql1);
+		$stmt->bindParam("phone", $con_phone);
+		$consumer_id = $stmt->fetchColumn(0);
+		      $stmt = $db->prepare($sql2);
+		      $stmt->bindParam("schedule_id", $schedule_id);
+			  $stmt->bindParam("consumer_id", $consumer_id);
+			  $stmt->bindParam("provider_id", $provider_id);
+			   $stmt->bindParam("map_status", $map_status);
 			  $stmt->execute();
-			  $stmt = $db->query($sql1);
-		      $stmt->bindParam("phone", $phone);
-			  $stmt->bindParam("map_status", $map_status);
-			  $stmt->bindParam("con_phone", $con_phone);
-			  $stmt->execute();
-			  $stmt = $db->query($sql2);
-		      $stmt->bindParam("phone", $phone);
-			  $stmt->bindParam("map_status", $map_status);
-			  $stmt->bindParam("con_phone", $con_phone);
+			  $stmt = $db->prepare($sql3);
+		      $stmt->bindParam("schedule_id", $schedule_id);
+			   $stmt->bindParam("provider_id", $provider_id);
 			  $stmt->execute();
 			  $db=null;
-			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been accepted and schedule is updated');
-			  }
-			  catch(PDOException $e) {
+			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been accepted');
+			}
+			 catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		
-			  } }
-	else if(map_status=="rejected")
-	{ $sql="UPDATE CONSUMER_PROVIDER_MAP SET MAP_STATUS= :map_status where CONSUMER.PHONE_NUM= :con_phone,CONSUMER.CONSUMER_ID=CONSUMER_SCHEDULE.CONSUMER_ID,CONSUMER_PROVIDER_MAP.CONSUMER_SCHEDULE_ID=CONSUMER_SCHEDULE.CONSUMER_SCHEDULE_ID and PROVIDER.PHONE_NUM= :phone and PROVIDER.PROVIDER_ID= CONSUMER_PROVIDER_MAP.PROVIDER_ID";
+			  }		
+		  
+		  
+		  }
+	else if($map_status=="rejected")
+	{     $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
+		  $sql1 = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$con_phone."'"; 
+     $sql4="INSERT INTO CONSUMER_PROVIDER_MAP (SCHEDULE_ID, CONSUMER_ID, PROVIDER_ID, MAP_STATUS) VALUES (:schedule_id, :consumer_id, :provider_id, :map_status) ";
 	try
 			{ $db = getDB();
-		      $stmt = $db->query($sql);
-		      $stmt->bindParam("phone", $phone);
-			  $stmt->bindParam("map_status", $map_status);
-			  $stmt->bindParam("con_phone", $con_phone);
+			$stmt = $db->query($sql);
+		$stmt->bindParam("phone", $phone);
+		$provider_id = $stmt->fetchColumn(0);
+		
+		$stmt = $db->query($sql1);
+		$stmt->bindParam("phone", $con_phone);
+		$consumer_id = $stmt->fetchColumn(0);
+		      $stmt = $db->prepare($sql4);
+              $stmt->bindParam("schedule_id", $schedule_id);
+			  $stmt->bindParam("consumer_id", $consumer_id);
+			  $stmt->bindParam("provider_id", $provider_id);
+              $stmt->bindParam("map_status", $map_status);		      
 			  $stmt->execute();
 			  $db=null;
 			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been rejected');
@@ -810,7 +825,7 @@ function changePasswordPro()
     $response->body(json_encode($dataArray));
 	  
 		}
-		
+	
 		function welcomeConsumer()
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
