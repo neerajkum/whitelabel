@@ -146,7 +146,7 @@ function randomPassword() {
 }
 
 function getUserSchedule($username,$startDate,$endDate)
-{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME, csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+{      $sql1="SELECT csd.SCHEDULE_DATE_ID, csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME, csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
        $db = getDB();
 	   $stmt = $db->query($sql1);
 	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);

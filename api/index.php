@@ -27,6 +27,7 @@ $app->post('/welcomeprovider','welcomeProvider');
 $app->post('/addclass','addClass');
 $app->post('/createproviderschedule','createProviderSchedule');
 $app->post('/viewmyclients','viewMyClients');
+$app->post('/updateClassStatus','updateClassStatus');
 $app->run();
 
 function registerConsumer() {
@@ -1063,4 +1064,43 @@ function changePasswordPro()
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($myClients));
 	  }
+
+function updateClassStatus(){
+	$app = \Slim\Slim::getInstance();
+	$request = $app->request();
+	$update = json_decode($request->getBody());
+
+	$scheduleDateId = $update->scheduleDateId;
+	$scheduleStatus = $update->scheduleStatus;
+
+	$phone = $update->phone;
+	$authKey= $update->authKey;
+
+	if(authenticateProvider($phone, $authKey))
+	{
+
+	$sql="UPDATE CONSUMER_SCHEDULE_DATE SET CLASS_STATUS =:scheduleStatus WHERE SCHEDULE_DATE_ID =:scheduleDateId";
+
+	try {
+			$db = getDB();
+			$stmt = $db->prepare($sql);
+			$stmt->bindParam("scheduleStatus", $scheduleStatus);
+			$stmt->bindParam("scheduleDateId", $scheduleDateId);
+			$stmt->execute();
+			$db = null;
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Successfully updated the class attended status';
+
+		} catch(PDOException $e) {
+			error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+	}
+	} else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Authentication Error. Kindly contact us at 9873805309');
+	}
+
+	$response = $app->response();
+	$response['Content-Type'] = 'application/json';
+    $response->body(json_encode($myClients));
+}
 ?>
