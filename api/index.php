@@ -1076,7 +1076,7 @@ function updateClassStatus(){
 	$phone = $update->phone;
 	$authKey= $update->authKey;
 
-	if(authenticateProvider($phone, $authKey))
+	if(authenticateConsumer($phone, $authKey))
 	{
 
 	$sql="UPDATE CONSUMER_SCHEDULE_DATE SET CLASS_STATUS =:scheduleStatus WHERE SCHEDULE_DATE_ID =:scheduleDateId";
