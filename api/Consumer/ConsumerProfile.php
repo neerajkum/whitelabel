@@ -146,32 +146,32 @@ function randomPassword() {
 }
 
 function getUserSchedule($username,$startDate,$endDate)
-{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME, csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
        $db = getDB();
 	   $stmt = $db->query($sql1);
 	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
 	   return $schedule;
-	  
+
 }
 
 function createScheduleDate($startDate, $startTime, $endTime, $days, $scheduleId){
-	
+
 	$initialDates = getInitialDateArray ($days, $startDate);
-	
+
 	$count = 0;
-	
+
 	for ($j=0; $j < 4 ; $j++)
 	{	for ($i = 0; $i < count($initialDates) ; $i++) {
 			$currentDate = $initialDates[$i];
-			
+
 			$newTime = strtotime(date("d-m-Y", $currentDate) . '+ '.$count.'days');
-			
+
 			$newDate = date("Y-m-d", $newTime);
-			
+
 			error_log(" newDate ".$newDate, 3, 'C:\xampp\php\logs\php.log');
-			
+
 			$sql="INSERT INTO CONSUMER_SCHEDULE_DATE (SCHEDULE_ID, SCHEDULE_DATE, START_TIME, END_TIME) VALUES(:scheduleId, :newDate, :startTime, :endTime )";
-			 
+
 			$db = getDB();
 			$stmt = $db->prepare($sql);
 			$stmt->bindParam("scheduleId", $scheduleId);
@@ -180,25 +180,25 @@ function createScheduleDate($startDate, $startTime, $endTime, $days, $scheduleId
 		    $stmt->bindParam("endTime", $endTime);
 			$stmt->execute();
 			$db=null;
-			
-		
-		
+
+
+
 	}
 	$count = $count+7;
 	}
 }
 
 function getInitialDateArray($days, $startDate) {
-	
+
 	$dw = date( "w", strtotime($startDate));
-	
+
 	$initialDays = getInitialDayArray($days);
 	$initialDates = array();
-	
+
 	for ($i = 0; $i < count($initialDays) ; $i++) {
-		
+
 		$currentNumber = $initialDays[$i];
-		
+
 		$diff = $currentNumber - $dw;
 		if ($diff < 0) {
 			$diff = $diff +7;
@@ -208,7 +208,7 @@ function getInitialDateArray($days, $startDate) {
 		array_push($initialDates,$newDate);
 
 	}
-	
+
 	return $initialDates;
 }
 
@@ -216,27 +216,27 @@ function getInitialDayArray($days) {
 	$dayOfWeekArray = array();
 	if ($days[0] == 'Y' || $days[0] == 'y') {
 		array_push($dayOfWeekArray,1);
-		
+
 	}
 	if ($days[1] == 'Y' || $days[1] == 'y') {
 		array_push($dayOfWeekArray,2);
-		
+
 	}
 	if ($days[2] == 'Y' || $days[2] == 'y') {
 		array_push($dayOfWeekArray,3);
-		
+
 	}
 	if ($days[3] == 'Y' || $days[3] == 'y') {
 		array_push($dayOfWeekArray,4);
-		
+
 	}
 	if ($days[4] == 'Y' || $days[4] == 'y') {
 		array_push($dayOfWeekArray,5);
-		
+
 	}
 	if ($days[5] == 'Y' || $days[5] == 'y') {
 		array_push($dayOfWeekArray,6);
-		
+
 	}
 	if ($days[6] == 'Y' || $days[6] == 'y') {
 		array_push($dayOfWeekArray,0);

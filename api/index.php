@@ -127,7 +127,7 @@ function updateConsumer(){
 	//$password = $update->password;
 
 	$bdate= $update->bdate;
-	
+
 	$height= $update->height;
 	$weight= $update->weight;
 	$address= $update->address;
@@ -181,9 +181,9 @@ function updateConsumer(){
 		$stmt = $db->query($sql);
 		$dataArray = $stmt->fetchAll(PDO::FETCH_OBJ);
 		$db=null;
-		
+
 	}
-    
+
 		catch(PDOException $e) {
 	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
@@ -191,16 +191,16 @@ function updateConsumer(){
 		}
 		if($dataArray==null)
 		{
-		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'CITY NOT FOUND');	
-			
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'CITY NOT FOUND');
+
 		}
 		$response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($dataArray)); 
-		
-        			
+		$response->body(json_encode($dataArray));
+
+
 		}
-     
+
 	 function getUserDetails()
 	 {  $app = \Slim\Slim::getInstance();
 
@@ -213,8 +213,8 @@ function updateConsumer(){
 			try {
 				$response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($user)); 
-				
+		$response->body(json_encode($user));
+
 	}
 	catch(PDOException $e) {
 	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
@@ -222,19 +222,19 @@ function updateConsumer(){
 			$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 	        $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($user)); 
+		$response->body(json_encode($user));
 	} }
 	else
 	{
-     $user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');		
+     $user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 	    $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($user)); 	
+		$response->body(json_encode($user));
 	}
-		 
-		 
+
+
 	  }
-	  
+
 	  function changePassword()
 	  { $app = \Slim\Slim::getInstance();
         $request = $app->request();
@@ -244,8 +244,8 @@ function updateConsumer(){
 		$oldpass= $update->oldpass;
 		$newpass= $update->newpass;
 				if (authenticateConsumer($phone,$authKey) && checkUserNameAndPassword ($phone, $oldpass))
-			
-		{  
+
+		{
 			{ $sql = "UPDATE CONSUMER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 		try
 				{ $db = getDB();
@@ -258,7 +258,7 @@ function updateConsumer(){
 			      $stmt->execute();
 			      $db = null;
 			      $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Password Successfully Updated');
-					
+
 				}
 				catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -266,8 +266,8 @@ function updateConsumer(){
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
 			}
-			
-	
+
+
 		}
 		else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Incorrect Current Password or Auth Key. If you are using our mobile app, please contact 9873805309');
@@ -277,7 +277,7 @@ function updateConsumer(){
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
 	  }
-	  
+
 	  function forgotPassword()
 	  { $app = \Slim\Slim::getInstance();
         $request = $app->request();
@@ -285,7 +285,7 @@ function updateConsumer(){
 		$phone = $update->phone;
 		if(getUser($phone))
 		{ $newpass=randomPassword();
-	      
+
 	     $sql = "SELECT EMAIL_ADDRESS FROM CONSUMER where PHONE_NUM ='".$phone."' ";
 		 $sql1="UPDATE CONSUMER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 	try
@@ -303,28 +303,28 @@ function updateConsumer(){
 			      $stmt->execute();
 			      $db = null;
 
-    
-    $from = "thepoweryoga@gmail.com";
-    $subject = "Your Password Has been reset"; 
-    $message = "Hi, we have reset your password. 
 
-    Your New Password is: $newpass 
+    $from = "thepoweryoga@gmail.com";
+    $subject = "Your Password Has been reset";
+    $message = "Hi, we have reset your password.
+
+    Your New Password is: $newpass
 
    LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD
-    Once logged in you can change your password 
+    Once logged in you can change your password
 
-    Thanks! 
+    Thanks!
     Admin YOM
 
-    This is an automated response, DO NOT REPLY!"; 
+    This is an automated response, DO NOT REPLY!";
 
    $headers = "From: $from\r\n";
         $headers .= "Content-type: text/html\r\n";
-       
+
         mail($email, $subject, $message, $headers);
-		
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'A New Password Has been sent to your registered mail id');	
-				
+
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'A New Password Has been sent to your registered mail id');
+
 			}
 			catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -338,14 +338,14 @@ function updateConsumer(){
 			$response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($dataArray));
-			
-			
+
+
 		}
-		  
-		
+
+
 		function getMySchedule()
-		
-		
+
+
 		{
 			$app = \Slim\Slim::getInstance();
             $request = $app->request();
@@ -356,46 +356,46 @@ function updateConsumer(){
 			$end_date= $update->end_date;
 			if (authenticateConsumer($phone,$authKey)) {
 		$schedule = getUserSchedule($phone, $start_date, $end_date);
-		
-    
+
+
 	if ($schedule !=null) {
 			try {
 				$response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 
-				
+		$response->body(json_encode($schedule));
+
 	}
 	catch(PDOException $e) {
 	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
-			$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+			$schedule = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 	        $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 
+		$response->body(json_encode($schedule));
 	} }
 	else
 	{
-     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'No Schedule Found');		
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'No Schedule Found');
 	    $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 	
+		$response->body(json_encode($schedule));
 	}
-		 
-		 
+
+
 	  }
 	  else
 	{
-     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');		
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
 	    $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 	
+		$response->body(json_encode($schedule));
 	}
-	  
+
 		}
-		
-		
-		
-		
+
+
+
+
 		function registerProvider() {
 
 	$app = \Slim\Slim::getInstance();
@@ -500,13 +500,13 @@ function updateProvider(){
 	$batch_end= $update->batch_end;
 	$experience= $update->experience;
 	if (authenticateProvider($phone,$authKey)) {
-		
+
 
         $sql = "UPDATE PROVIDER SET NAME = :name, EMAIL_ADDRESS = :email,BIRTH_DATE = :bdate, HEIGHT = :height, WEIGHT = :weight, ADDRESS =:address, GENDER =:gender, EXPERIENCE =:experience, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
-        $sql1="INSERT INTO QUALIFICATION (PROVIDER_ID, DEGREE, INSTITUTE, COURSE_TYPE, BATCH_START, BATCH_END) VALUES (:providerId, :degree, :institute, :course_type, :batch_start, :batch_end) " ; 
+        $sql1="INSERT INTO QUALIFICATION (PROVIDER_ID, DEGREE, INSTITUTE, COURSE_TYPE, BATCH_START, BATCH_END) VALUES (:providerId, :degree, :institute, :course_type, :batch_start, :batch_end) " ;
 		$sql2 = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."' ";
-		 
-	
+
+
 	    $db = getDB();
 		$stmt = $db->query($sql2);
 		$stmt->bindParam("phone", $phone);
@@ -519,7 +519,7 @@ function updateProvider(){
 			$stmt->bindParam("phone", $phone);
 			$stmt->bindParam("email", $email);
 			$stmt->bindParam("bdate", $bdate);
-			
+
                         $stmt->bindParam("height", $height);
                         $stmt->bindParam("weight", $weight);
                         $stmt->bindParam("address", $address);
@@ -541,15 +541,15 @@ function updateProvider(){
 			$stmt->execute();
 			$db = null;
 			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Profile Successfully Updated');
-			
+
 
 		} catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
-		
-			
+
+
 	} else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
 	}
@@ -557,7 +557,7 @@ function updateProvider(){
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray)); }
-	
+
 
 function changePasswordPro()
 	  { $app = \Slim\Slim::getInstance();
@@ -568,8 +568,8 @@ function changePasswordPro()
 		$oldpass= $update->oldpass;
 		$newpass= $update->newpass;
 				if (authenticateProvider($phone,$authKey) && checkPUserNameAndPassword ($phone, $oldpass))
-			
-		{  
+
+		{
 			{ $sql = "UPDATE PROVIDER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 		try
 				{ $db = getDB();
@@ -582,7 +582,7 @@ function changePasswordPro()
 			      $stmt->execute();
 			      $db = null;
 			      $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Password Successfully Updated');
-					
+
 				}
 				catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -590,8 +590,8 @@ function changePasswordPro()
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
 			}
-			
-	
+
+
 		}
 		else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Incorrect Current Password or Auth Key. If you are using our mobile app, please contact 9873805309');
@@ -601,7 +601,7 @@ function changePasswordPro()
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
 	  }
-	  
+
 	  function forgotPasswordPro()
 	  { $app = \Slim\Slim::getInstance();
         $request = $app->request();
@@ -609,7 +609,7 @@ function changePasswordPro()
 		$phone = $update->phone;
 		if(getPUser($phone))
 		{ $newpass=randomPassword();
-	      
+
 	     $sql = "SELECT EMAIL_ADDRESS FROM PROVIDER where PHONE_NUM ='".$phone."' ";
 		 $sql1="UPDATE PROVIDER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 	try
@@ -626,28 +626,28 @@ function changePasswordPro()
 			      $stmt->execute();
 			      $db = null;
 
-    
-    $from = "thepoweryoga@gmail.com";
-    $subject = "Your Password Has been reset"; 
-    $message = "Hi, we have reset your password. 
 
-    Your New Password is: $newpass 
+    $from = "thepoweryoga@gmail.com";
+    $subject = "Your Password Has been reset";
+    $message = "Hi, we have reset your password.
+
+    Your New Password is: $newpass
 
    LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD
-    Once logged in you can change your password 
+    Once logged in you can change your password
 
-    Thanks! 
+    Thanks!
     Admin YOM
 
-    This is an automated response, DO NOT REPLY!"; 
+    This is an automated response, DO NOT REPLY!";
 
    $headers = "From: $from\r\n";
         $headers .= "Content-type: text/html\r\n";
-       
+
         mail($email, $subject, $message, $headers);
-		
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'A New Password Has been sent to your registered mail id');	
-				
+
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'A New Password Has been sent to your registered mail id');
+
 			}
 			catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -661,13 +661,13 @@ function changePasswordPro()
 			$response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($dataArray));
-			
-			
-		}	
-		
+
+
+		}
+
 		function getMySchedulePro()
-		
-		
+
+
 		{
 			$app = \Slim\Slim::getInstance();
             $request = $app->request();
@@ -678,14 +678,14 @@ function changePasswordPro()
 			$end_date= $update->end_date;
 			if (authenticateProvider($phone,$authKey)) {
 		$schedule = getPUserSchedule($phone, $start_date, $end_date);
-		
-    
+
+
 	if ($schedule !=null) {
 			try {
 				$response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 
-				
+		$response->body(json_encode($schedule));
+
 	}
 	catch(PDOException $e) {
 	   error_log($e->getMessage(), 3, '/var/tmp/php.log');
@@ -693,31 +693,31 @@ function changePasswordPro()
 			$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 	        $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 
+		$response->body(json_encode($schedule));
 	} }
 	else
 	{
-     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'No Schedule Found');		
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'No Schedule Found');
 	    $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 	
+		$response->body(json_encode($schedule));
 	}
-		 
-		 
+
+
 	  }
 	  else
 	{
-     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');		
+     $schedule = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key. If you are using our mobile app, please contact 9873805309');
 	    $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($schedule)); 	
+		$response->body(json_encode($schedule));
 	}
-	  
-		}  
-		  
+
+		}
+
 		function getPendingRequest()
 		{
-			
+
 	$app = \Slim\Slim::getInstance();
 
 	$request = $app->request();
@@ -728,18 +728,18 @@ function changePasswordPro()
 		$stmt = $db->query($sql);
 		$requests = $stmt->fetchAll(PDO::FETCH_OBJ);
 		$db = null;
-		
+
 	} catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$requests = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		
+
 	}
 		  $response = $app->response();
 	    $response['Content-Type'] = 'application/json';
-		$response->body(json_encode($requests)); 	
+		$response->body(json_encode($requests));
 		}
 
- 		function updateRequest() 
+ 		function updateRequest()
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
 	      $update = json_decode($request->getBody());
@@ -759,7 +759,7 @@ function changePasswordPro()
 			$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
 		$provider_id = $stmt->fetchColumn(0);
-		
+
 		$stmt = $db->query($sql1);
 		$stmt->bindParam("phone", $con_phone);
 		$consumer_id = $stmt->fetchColumn(0);
@@ -779,21 +779,21 @@ function changePasswordPro()
 			 catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		
-			  }		
-		  
-		  
+
+			  }
+
+
 		  }
 	else if($map_status=="rejected")
 	{     $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
-		  $sql1 = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$con_phone."'"; 
+		  $sql1 = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$con_phone."'";
      $sql4="INSERT INTO CONSUMER_PROVIDER_MAP (SCHEDULE_ID, CONSUMER_ID, PROVIDER_ID, MAP_STATUS) VALUES (:schedule_id, :consumer_id, :provider_id, :map_status) ";
 	try
 			{ $db = getDB();
 			$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
 		$provider_id = $stmt->fetchColumn(0);
-		
+
 		$stmt = $db->query($sql1);
 		$stmt->bindParam("phone", $con_phone);
 		$consumer_id = $stmt->fetchColumn(0);
@@ -801,7 +801,7 @@ function changePasswordPro()
               $stmt->bindParam("schedule_id", $schedule_id);
 			  $stmt->bindParam("consumer_id", $consumer_id);
 			  $stmt->bindParam("provider_id", $provider_id);
-              $stmt->bindParam("map_status", $map_status);		      
+              $stmt->bindParam("map_status", $map_status);
 			  $stmt->execute();
 			  $db=null;
 			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been rejected');
@@ -809,12 +809,12 @@ function changePasswordPro()
 			 catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		
+
 			  }
 	}
-	
-			  
-			  
+
+
+
 		  }
 			else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Incorrect Current Password or Auth Key. If you are using our mobile app, please contact 9873805309');
@@ -823,9 +823,9 @@ function changePasswordPro()
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
-	  
+
 		}
-	
+
 		function welcomeConsumer()
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
@@ -833,19 +833,19 @@ function changePasswordPro()
 		  $phone = $update->phone;
 		  $sql="SELECT NAME,ADDRESS from CONSUMER where PHONE_NUM='".$phone."'";
 		 try
-         { 
+         {
 		      $db = getDB();
 		      $stmt = $db->query($sql);
 		      $user = $stmt->fetchAll(PDO::FETCH_OBJ);
-		      $db = null;  
-			 
-		 }		 
+		      $db = null;
+
+		 }
 		 catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		
+
 			  }
-			  
+
 			$response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($user));
@@ -857,19 +857,19 @@ function changePasswordPro()
 		  $phone = $update->phone;
 		  $sql="SELECT NAME,ADDRESS from PROVIDER where PHONE_NUM='".$phone."'";
 		 try
-         { 
+         {
 		      $db = getDB();
 		      $stmt = $db->query($sql);
 		      $user = $stmt->fetchAll(PDO::FETCH_OBJ);
-		      $db = null;  
-			 
-		 }		 
+		      $db = null;
+
+		 }
 		 catch(PDOException $e) {
 	    error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		$user = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		
+
 			  }
-			  
+
 			$response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($user));
@@ -887,14 +887,14 @@ function changePasswordPro()
 		  $end_date= $update->end_date;
 		 $start_time= $update->start_time;
 		 $end_time= $update->end_time;
-		 $days= $update->days; 
+		 $days= $update->days;
 		 $mon=$days[0];
 		  $tue=$days[1];
 		  $wed=$days[2];
 		  $thurs=$days[3];
 		  $fri=$days[4];
 		  $sat=$days[5];
-		  $sun=$days[6]; 
+		  $sun=$days[6];
 		  if(authenticateConsumer($phone,$authKey))
 		  { $sql = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$phone."'";
 	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('CONSUMER', :consumer_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
@@ -916,8 +916,8 @@ function changePasswordPro()
 		$stmt->bindParam("thurs", $thurs);
 		$stmt->bindParam("fri", $fri);
 		$stmt->bindParam("sat", $sat);
-		$stmt->bindParam("sun", $sun); 
-		
+		$stmt->bindParam("sun", $sun);
+
 			  $stmt->execute();
 			  $scheduleId = $db->lastInsertId();
 			  $db=null;
@@ -928,23 +928,23 @@ function changePasswordPro()
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
-		
-		
-			  
-			  
+
+
+
+
 		  }
 		  else
 		{  $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
-			
+
 		}
 		  $response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($dataArray));
-		  
-			
-			
+
+
+
 		}
-		
+
 		function createProviderSchedule()
 		{ $app = \Slim\Slim::getInstance();
           $request = $app->request();
@@ -960,20 +960,20 @@ function changePasswordPro()
 		  $end_date= $update->end_date;
 		 $start_time= $update->start_time;
 		 $end_time= $update->end_time;
-		 $days= $update->days; 
+		 $days= $update->days;
 		 $mon=$days[0];
 		  $tue=$days[1];
 		  $wed=$days[2];
 		  $thurs=$days[3];
 		  $fri=$days[4];
 		  $sat=$days[5];
-		  $sun=$days[6]; 
-		  
+		  $sun=$days[6];
+
 		  if(authenticateProvider($phone,$authKey))
 		  { $con_id=InsertConsumerByProvider($name, $con_phone, $venue);
 	        if($con_id!=null)
 			{
-	  
+
 	        $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
 	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, PROVIDER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('PROVIDER', :consumer_id, :provider_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
 	        try
@@ -995,8 +995,8 @@ function changePasswordPro()
 		$stmt->bindParam("thurs", $thurs);
 		$stmt->bindParam("fri", $fri);
 		$stmt->bindParam("sat", $sat);
-		$stmt->bindParam("sun", $sun); 
-		
+		$stmt->bindParam("sun", $sun);
+
 			  $stmt->execute();
 			  $scheduleId = $db->lastInsertId();
 			  $db=null;
@@ -1007,27 +1007,27 @@ function changePasswordPro()
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
-		
-		
-			  
+
+
+
 			}
            else
            {
 			   $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-		   }			   
+		   }
 		  }
 		  else
 		{  $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
-			
+
 		}
 		  $response = $app->response();
 	        $response['Content-Type'] = 'application/json';
             $response->body(json_encode($dataArray));
-		  
-			
-			
+
+
+
 		}
-	  
+
 	  function viewMyClients()
 	  { $app = \Slim\Slim::getInstance();
           $request = $app->request();
@@ -1057,10 +1057,10 @@ function changePasswordPro()
 		  else
 		  {
 			  $myClients = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Auth Key');
-			  
+
 		  }
             $response = $app->response();
 	        $response['Content-Type'] = 'application/json';
-            $response->body(json_encode($myClients));		  
+            $response->body(json_encode($myClients));
 	  }
 ?>

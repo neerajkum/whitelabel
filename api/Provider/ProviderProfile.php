@@ -136,16 +136,16 @@ function authenticateProvider ($username, $providerAuthKey) {
 
 
 function getPUserSchedule($username, $startDate, $endDate)
-{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, PROVIDER p where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.PROVIDER_ID=p.PROVIDER_ID and p.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+{      $sql1="SELECT csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME,csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, PROVIDER p where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.PROVIDER_ID=p.PROVIDER_ID and p.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
        $db = getDB();
 	   $stmt = $db->query($sql1);
 	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
 	   return $schedule;
-	  
+
 }
 
 function InsertConsumerByProvider($name, $phone, $address)
-{ 
+{
 $user = getUser($phone);
 
 	if ($user !=null) {
@@ -153,7 +153,7 @@ $user = getUser($phone);
 			$db = getDB();
 			$stmt = $db->query($sql);
 		    $id = $stmt->fetchColumn(0);
-	} 
+	}
 else {
 $sql = "INSERT INTO CONSUMER (NAME, PHONE_NUM, EMAIL_ADDRESS, PASSWORD, ADDRESS, CREATED_DT, LAST_UPDATED_DT) VALUES (:name, :phone, 'email', 'password', :address, :createdDt, :lastUpdatedDt)";
 		try {
@@ -169,7 +169,7 @@ $sql = "INSERT INTO CONSUMER (NAME, PHONE_NUM, EMAIL_ADDRESS, PASSWORD, ADDRESS,
 			$stmt->execute();
 			$id = $db->lastInsertId();
 			$db = null;
-		    
+
 
 		} catch(PDOException $e) {
 			error_log($e->getMessage(), 3, '/var/tmp/php.log');
