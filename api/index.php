@@ -1088,7 +1088,7 @@ function updateClassStatus(){
 			$stmt->bindParam("scheduleDateId", $scheduleDateId);
 			$stmt->execute();
 			$db = null;
-			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Successfully updated the class attended status';
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Successfully updated the class attended status');
 
 		} catch(PDOException $e) {
 			error_log($e->getMessage(), 3, '/var/tmp/php.log');
@@ -1101,6 +1101,6 @@ function updateClassStatus(){
 
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
-    $response->body(json_encode($myClients));
+    $response->body(json_encode($dataArray));
 }
 ?>
