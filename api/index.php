@@ -28,6 +28,7 @@ $app->post('/addclass','addClass');
 $app->post('/createproviderschedule','createProviderSchedule');
 $app->post('/viewmyclients','viewMyClients');
 $app->post('/updateClassStatus','updateClassStatus');
+$app->post('/validatepromocode','validatePromoCode');
 $app->run();
 
 function registerConsumer() {
@@ -1102,5 +1103,50 @@ function updateClassStatus(){
 	$response = $app->response();
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
+}
+
+function validatePromoCode()
+{   $app = \Slim\Slim::getInstance();
+	$request = $app->request();
+	$update = json_decode($request->getBody());
+	$phone = $update->phone;
+    $authKey= $update->authKey;
+	$promo_code = $update->promo_code; 
+	if(authenticateConsumer($phone, $authKey))
+		  { 
+	    $promo =  findPromo($promo_code);
+      if($promo!=null)		
+	  {
+      $sql="SELECT AMOUNT_DISCOUNT FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
+	  $sql1="SELECT PERCENT_DISCOUNT FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
+	  try {
+		  $db=getDB();
+		  $stmt = $db->query($sql);
+			$stmt->bindParam("promo_code", $promo_code);
+			$amount = $stmt->fetchColumn(0);
+			$stmt = $db->query($sql1);
+			$stmt->bindParam("promo_code", $promo_code);
+			$percent = $stmt->fetchColumn(0);
+			$db = null;
+			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Promo Code Successfully Applied', 'Amount:' => $amount, 'Percentage:' => $percent);
+
+		} catch(PDOException $e) {
+			error_log($e->getMessage(), 3, '/var/tmp/php.log');
+			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+	  } }
+	else{ $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Promo Code');
+		
+	}
+	} else {
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Authentication Error. Kindly contact us at 9873805309');
+	}
+
+	$response = $app->response();
+	$response['Content-Type'] = 'application/json';
+    $response->body(json_encode($dataArray));
+	  
+	
+	
 }
 ?>

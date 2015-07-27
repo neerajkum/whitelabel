@@ -243,6 +243,15 @@ function getInitialDayArray($days) {
 	}
 	return $dayOfWeekArray;
 }
+function findPromo($promo_code)
+{ $sql="SELECT * FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
+		  $db=getDB();
+		  $stmt = $db->query($sql);
+		  $stmt->bindParam("promo_code", $promo_code);
+		  $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+		  $db = null;
+		  return $result;
+		  }
 
 
 ?>
