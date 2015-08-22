@@ -63,6 +63,20 @@ function registerConsumer() {
 			$stmt->execute();
 			$id = $db->lastInsertId();
 			$db = null;
+			$from = "admin@yom.co.in";
+    $subject = "You have successfully registered with YOM";
+    $message = "Dear Customer $name <br> <br>
+    Your YOM account has been successfully created.<br> <br>
+ 
+    Regards! <br>
+    YOM Team <br> <br>
+
+    This is an automated response, DO NOT REPLY!";
+
+   $headers = "From: $from\r\n";
+        $headers .= "Content-type: text/html\r\n";
+
+        mail($email, $subject, $message, $headers);
 			$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Registration Successful', 'Id' => $id);
 
 		} catch(PDOException $e) {
@@ -287,14 +301,18 @@ function updateConsumer(){
 		$phone = $update->phone;
 		if(getUser($phone))
 		{ $newpass=randomPassword();
-
+         $sql2= "SELECT NAME FROM CONSUMER where PHONE_NUM ='".$phone."' ";
 	     $sql = "SELECT EMAIL_ADDRESS FROM CONSUMER where PHONE_NUM ='".$phone."' ";
 		 $sql1="UPDATE CONSUMER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 	try
 			{ $db = getDB();
 		$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
-		$email = $stmt->fetchColumn(3);
+		$email = $stmt->fetchColumn(0);
+		$stmt = $db->query($sql2);
+		$stmt->bindParam("phone", $phone);
+		$name = $stmt->fetchColumn(0);
+		
 		$stmt = $db->prepare($sql1);
 			      $stmt->bindParam("newpass", $newpass);
 				  date_default_timezone_set('Asia/Kolkata');
@@ -306,17 +324,17 @@ function updateConsumer(){
 			      $db = null;
 
 
-    $from = "thepoweryoga@gmail.com";
+    $from = "admin@yom.co.in";
     $subject = "Your Password Has been reset";
-    $message = "Hi, we have reset your password.
+    $message = "Dear Customer $name <br> <br>
+    Your YOM password has been reset.<br> <br>
+    Username: $phone <br>
+	New Password: $newpass <br> <br>
+    LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD <br>
+    Once logged in you can change your password <br> <br>
 
-    Your New Password is: $newpass
-
-   LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD
-    Once logged in you can change your password
-
-    Thanks!
-    Admin YOM
+    Regards! <br>
+    YOM Team <br> <br>
 
     This is an automated response, DO NOT REPLY!";
 
@@ -611,14 +629,17 @@ function changePasswordPro()
 		$phone = $update->phone;
 		if(getPUser($phone))
 		{ $newpass=randomPassword();
-
+         $sql2 = "SELECT NAME FROM PROVIDER where PHONE_NUM ='".$phone."' ";
 	     $sql = "SELECT EMAIL_ADDRESS FROM PROVIDER where PHONE_NUM ='".$phone."' ";
 		 $sql1="UPDATE PROVIDER SET PASSWORD = :newpass, LAST_UPDATED_DT= :lastUpdatedDt WHERE PHONE_NUM = :phone";
 	try
 			{ $db = getDB();
 		$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
-		$email = $stmt->fetchColumn(3);
+		$email = $stmt->fetchColumn(0);
+		$stmt = $db->query($sql2);
+		$stmt->bindParam("phone", $phone);
+		$name = $stmt->fetchColumn(0);
 		$stmt = $db->prepare($sql1);
 			      $stmt->bindParam("newpass", $newpass);
 				  date_default_timezone_set('Asia/Kolkata');
@@ -629,17 +650,17 @@ function changePasswordPro()
 			      $db = null;
 
 
-    $from = "thepoweryoga@gmail.com";
+    $from = "admin@yom.co.in";
     $subject = "Your Password Has been reset";
-    $message = "Hi, we have reset your password.
+    $message = "Dear Customer $name <br> <br>
+    Your YOM password has been reset.<br> <br>
+    Username: $phone <br>
+	New Password: $newpass <br> <br>
+    LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD <br>
+    Once logged in you can change your password <br> <br>
 
-    Your New Password is: $newpass
-
-   LOGIN TO OUR MOBILE APP USING THIS NEW PASSWORD
-    Once logged in you can change your password
-
-    Thanks!
-    Admin YOM
+    Regards! <br>
+    YOM Team <br> <br>
 
     This is an automated response, DO NOT REPLY!";
 
@@ -890,6 +911,8 @@ function changePasswordPro()
 		 $start_time= $update->start_time;
 		 $end_time= $update->end_time;
 		 $days= $update->days;
+		 $promo_code= $update->promo_code;
+		 $rate= $update->rate;
 		 $mon=$days[0];
 		  $tue=$days[1];
 		  $wed=$days[2];
@@ -899,8 +922,9 @@ function changePasswordPro()
 		  $sun=$days[6];
 		  if(authenticateConsumer($phone,$authKey))
 		  { $sql = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$phone."'";
-	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('CONSUMER', :consumer_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
-	        try
+	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN, RATE) VALUES('CONSUMER', :consumer_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun, :rate)";
+	        $sql3="UPDATE CONSUMER_SCHEDULE SET PROMO_CODE=:promo_code where SCHEDULE_ID =:schedule_id";
+			try
 			{ $db = getDB();
 		$stmt = $db->query($sql);
 		$stmt->bindParam("phone", $phone);
@@ -919,16 +943,21 @@ function changePasswordPro()
 		$stmt->bindParam("fri", $fri);
 		$stmt->bindParam("sat", $sat);
 		$stmt->bindParam("sun", $sun);
-
-			  $stmt->execute();
-			  $scheduleId = $db->lastInsertId();
-			  $db=null;
-			  createScheduleDate($start_date, $start_time, $end_time, $days, $scheduleId);
-			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been successfully booked'); }
-			catch(PDOException $e) {
-			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
-			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
-			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
+		$stmt->bindParam("rate", $rate);
+        $stmt->execute();
+		 
+		$schedule_id = $db->lastInsertId();
+		$stmt = $db->prepare($sql3);
+		$stmt->bindParam("promo_code", $promo_code);
+		$stmt->bindParam("schedule_id", $schedule_id);
+		$stmt->execute(); 
+		$db=null;
+		createScheduleDate($start_date, $start_time, $end_time, $days, $schedule_id);
+		$dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Class has been successfully booked'); }
+		catch(PDOException $e) {
+		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
+		//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
+		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 		}
 
 
@@ -963,6 +992,7 @@ function changePasswordPro()
 		 $start_time= $update->start_time;
 		 $end_time= $update->end_time;
 		 $days= $update->days;
+		 $rate= $update->rate;
 		 $mon=$days[0];
 		  $tue=$days[1];
 		  $wed=$days[2];
@@ -977,7 +1007,7 @@ function changePasswordPro()
 			{
 
 	        $sql = "SELECT PROVIDER_ID FROM PROVIDER where PHONE_NUM ='".$phone."'";
-	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, PROVIDER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN) VALUES('PROVIDER', :consumer_id, :provider_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun)";
+	        $sql1 = "INSERT INTO CONSUMER_SCHEDULE (PROFILE, CONSUMER_ID, PROVIDER_ID, VENUE, VENUE_LAT, VENUE_LONG, START_DATE, END_DATE, MON, TUE, WED, THURS, FRI, SAT, SUN, RATE) VALUES('PROVIDER', :consumer_id, :provider_id, :venue, :venue_lat, :venue_long, :start_date, :end_date, :mon, :tue, :wed, :thurs, :fri, :sat, :sun, :rate)";
 	        try
 			{ $db = getDB();
 		$stmt = $db->query($sql);
@@ -998,11 +1028,12 @@ function changePasswordPro()
 		$stmt->bindParam("fri", $fri);
 		$stmt->bindParam("sat", $sat);
 		$stmt->bindParam("sun", $sun);
+		$stmt->bindParam("rate", $rate);
 
 			  $stmt->execute();
 			  $scheduleId = $db->lastInsertId();
 			  $db=null;
-			  createScheduleDate($start_date, $start_time, $end_time, $days, $scheduleId);
+;			  createScheduleDate($start_date, $start_time, $end_time, $days, $scheduleId);
 			  $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Schedule has been successfully uploaded'); }
 			catch(PDOException $e) {
 			error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
@@ -1073,14 +1104,15 @@ function updateClassStatus(){
 
 	$scheduleDateId = $update->scheduleDateId;
 	$scheduleStatus = $update->scheduleStatus;
-
+    $scheduleDate = $update->scheduleDate;
 	$phone = $update->phone;
 	$authKey= $update->authKey;
+	
 
 	if(authenticateConsumer($phone, $authKey))
 	{
-
-	$sql="UPDATE CONSUMER_SCHEDULE_DATE SET CLASS_STATUS =:scheduleStatus WHERE SCHEDULE_DATE_ID =:scheduleDateId";
+       if($scheduleDateId !=null)
+	   {$sql="UPDATE CONSUMER_SCHEDULE_DATE SET CLASS_STATUS =:scheduleStatus WHERE SCHEDULE_DATE_ID =:scheduleDateId";
 
 	try {
 			$db = getDB();
@@ -1095,7 +1127,11 @@ function updateClassStatus(){
 			error_log($e->getMessage(), 3, '/var/tmp/php.log');
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
-	}
+	   } }
+	   else
+	   {  insertNewDate($phone, $scheduleDate, $scheduleStatus);
+		   $dataArray = array('Response_Type' => 'Success', 'Response_Message' => 'Successfully Added and updated the class attended status');
+	   }
 	} else {
 		$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Authentication Error. Kindly contact us at 9873805309');
 	}
@@ -1104,7 +1140,6 @@ function updateClassStatus(){
 	$response['Content-Type'] = 'application/json';
     $response->body(json_encode($dataArray));
 }
-
 function validatePromoCode()
 {   $app = \Slim\Slim::getInstance();
 	$request = $app->request();
@@ -1116,9 +1151,17 @@ function validatePromoCode()
 		  { 
 	    $promo =  findPromo($promo_code);
       if($promo!=null)		
-	  {
-      $sql="SELECT AMOUNT_DISCOUNT FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
+	  { 
+	  $sql="SELECT AMOUNT_DISCOUNT FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
 	  $sql1="SELECT PERCENT_DISCOUNT FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
+	  $sql2 = "SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM ='".$phone."'";
+	  $db=getDB();
+	  $stmt = $db->query($sql2);
+	  $consumer_id = $stmt->fetchColumn(0);
+	  $db = null;
+	  if(checkpromo($consumer_id,$promo_code)) 
+	  {
+	  
 	  try {
 		  $db=getDB();
 		  $stmt = $db->query($sql);
@@ -1135,6 +1178,8 @@ function validatePromoCode()
 			//echo '{"error":{"text":'. $e->getMessage() .'},"message":'. $update .'}';
 			$dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'We are unable to server your request at present. Kindly contact us at 9873805309');
 	  } }
+	  else{ $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'You have already used this Promo Code !!'); }
+	  }
 	else{ $dataArray = array('Response_Type' => 'Error', 'Response_Message' => 'Invalid Promo Code');
 		
 	}

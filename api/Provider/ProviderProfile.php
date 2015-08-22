@@ -114,7 +114,7 @@ function insertInProviderLogin ($providerId, $providerAuthKey, $pushDeviceId, $d
 }
 
 function authenticateProvider ($username, $providerAuthKey) {
-	$sql = "SELECT p.provider_id FROM provider p, provider_login pl WHERE pl.provider_id = p.provider_id AND p.phone_num = '".$username."' AND pl.AUTH_KEY = '".$providerAuthKey."'";
+	$sql = "SELECT P.PROVIDER_ID FROM PROVIDER P, PROVIDER_LOGIN P1 WHERE P1.PROVIDER_ID = P.PROVIDER_ID AND P.PHONE_NUM = '".$username."' AND P1.AUTH_KEY = '".$providerAuthKey."'";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
@@ -136,7 +136,7 @@ function authenticateProvider ($username, $providerAuthKey) {
 
 
 function getPUserSchedule($username, $startDate, $endDate)
-{      $sql1="SELECT csd.SCHEDULE_DATE_ID, csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME,csd.CLASS_STATUS, cs.VENUE FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, PROVIDER p where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.PROVIDER_ID=p.PROVIDER_ID and p.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+{      $sql1="SELECT csd.SCHEDULE_DATE_ID, csd.SCHEDULE_ID, csd.SCHEDULE_DATE, cs.VENUE, csd.START_TIME, csd.END_TIME,csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, PROVIDER p where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.PROVIDER_ID=p.PROVIDER_ID and p.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
        $db = getDB();
 	   $stmt = $db->query($sql1);
 	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);

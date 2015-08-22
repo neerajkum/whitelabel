@@ -44,7 +44,7 @@ function checkUserNameAndPassword ($username, $password) {
 	} catch(PDOException $e) {
 		error_log($e->getMessage(), 3, 'C:\xampp\php\logs\php.log');
 		echo '{"error":{"text":'. $e->getMessage() .'}}';
-		$userrs =  null;
+		$users =  null;
 	}
 
 	return $users;
@@ -116,7 +116,7 @@ function insertInConsumerLogin ($consumerId, $consumerAuthKey, $pushDeviceId, $d
 }
 
 function authenticateConsumer ($username, $consumerAuthKey) {
-	$sql = "SELECT c.consumer_id FROM consumer c, consumer_login cl WHERE cl.consumer_id = c.consumer_id AND c.phone_num = '".$username."' AND cl.AUTH_KEY = '".$consumerAuthKey."'";
+	$sql = "SELECT C.CONSUMER_ID FROM CONSUMER C, CONSUMER_LOGIN C1 WHERE C1.CONSUMER_ID = C.CONSUMER_ID AND C.PHONE_NUM = '".$username."' AND C1.AUTH_KEY = '".$consumerAuthKey."'";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);
@@ -146,7 +146,7 @@ function randomPassword() {
 }
 
 function getUserSchedule($username,$startDate,$endDate)
-{      $sql1="SELECT csd.SCHEDULE_DATE_ID, csd.SCHEDULE_ID, csd.SCHEDULE_DATE, csd.START_TIME, csd.END_TIME, csd.CLASS_STATUS, cs.VENUE FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
+{      $sql1="SELECT csd.SCHEDULE_DATE_ID, csd.SCHEDULE_ID, csd.SCHEDULE_DATE, cs.VENUE, csd.START_TIME, csd.END_TIME, csd.CLASS_STATUS FROM CONSUMER_SCHEDULE_DATE csd, CONSUMER_SCHEDULE cs, CONSUMER c where csd.SCHEDULE_DATE BETWEEN '".$startDate."' and '".$endDate."' and csd.SCHEDULE_ID=cs.SCHEDULE_ID and cs.CONSUMER_ID=c.CONSUMER_ID and c.PHONE_NUM='".$username."' order by csd.SCHEDULE_DATE";
        $db = getDB();
 	   $stmt = $db->query($sql1);
 	   $schedule = $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -243,6 +243,36 @@ function getInitialDayArray($days) {
 	}
 	return $dayOfWeekArray;
 }
+
+function insertNewDate($phone,$scheduleDate,$scheduleStatus)
+{ $sql1="SELECT CONSUMER_ID FROM CONSUMER where PHONE_NUM='".$phone."'";
+	$db = getDB();
+		$stmt = $db->query($sql1);
+		$consumer_id = $stmt->fetchColumn(0);
+		$db=null;
+	$sql2="SELECT SCHEDULE_ID FROM CONSUMER_SCHEDULE where CONSUMER_ID='".$consumer_id."'";
+	$db = getDB();
+		$stmt = $db->query($sql2);
+		$schedule_id = $stmt->fetchColumn(0);
+		$db=null;
+	$sql3="SELECT * FROM CONSUMER_SCHEDULE_DATE where SCHEDULE_ID='".$schedule_id."'";
+	$db = getDB();
+	$stmt = $db->query($sql3);
+		$startTime = $stmt->fetchColumn(3);
+		$endTime = $stmt->fetchColumn(4);
+		$db=null;
+	$sql="INSERT INTO CONSUMER_SCHEDULE_DATE (SCHEDULE_ID, SCHEDULE_DATE, START_TIME, END_TIME, CLASS_STATUS) VALUES(:schedule_id, :scheduleDate, :startTime, :endTime, :scheduleStatus )";
+
+			$db = getDB();
+			$stmt = $db->prepare($sql);
+			$stmt->bindParam("schedule_id", $schedule_id);
+		    $stmt->bindParam("scheduleDate", $scheduleDate);
+			$stmt->bindParam("startTime", $startTime);
+		    $stmt->bindParam("endTime", $endTime);
+			$stmt->bindParam("scheduleStatus", $scheduleStatus);
+			$stmt->execute();
+			$db=null;
+}
 function findPromo($promo_code)
 { $sql="SELECT * FROM PROMO_TABLE where PROMO_CODE ='".$promo_code."'";
 		  $db=getDB();
@@ -252,6 +282,16 @@ function findPromo($promo_code)
 		  $db = null;
 		  return $result;
 		  }
-
-
+function checkpromo($consumer_id, $promo_code)
+{ $sql="SELECT PROMO_CODE FROM CONSUMER_SCHEDULE where CONSUMER_ID ='".$consumer_id."'";
+ $db=getDB();
+ $stmt = $db->query($sql);
+ $promo = $stmt->fetchColumn(0);
+ $db = null;
+if($promo == $promo_code)
+return false;
+else
+return true;	
+	
+}
 ?>
